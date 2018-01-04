@@ -12,7 +12,7 @@ class paisSpider(CrawlSpider):
     
     rules = {
         
-        Rule(LinkExtractor(allow = (), restrict_xpaths = ('//*[@class="articulo-titulo"]')) callback = 'parse_item', follow = False)
+        Rule(LinkExtractor(allow = (), restrict_xpaths = ('//*[@class="articulo-titulo"]')))
     }
     
     def parse_item(self, response):
