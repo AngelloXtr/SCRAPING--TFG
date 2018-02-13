@@ -1,47 +1,57 @@
-# -*- coding: utf-8 -*-
+# -- coding: utf-8 --
 import scrapy
-import sys
-reload(sys)
-sys.setdefaultencoding('utf-8')
+from utils.utils import *
+from utils.constants import *
 
-#from tfg.items import TfgItem
-f = open("output.txt","w")
+
 class SpidetSpider(scrapy.Spider):
 	name = 'spidet'
-	allowed_domains = ['elpais.com']
-	start_urls = ['https://elpais.com/']
-	
+	allowed_domains = [ALLOWED_DOMAIN]
+	start_urls = [START_URLS]
 
+	# Saca las urls de la web y las pone en formato valido ("https://elpais.com/" + url)
 	def parse(self, response):
-		urls = response.xpath('//section[starts-with(@class, "bloque_")]/div/div/div/article/div/h2[@class="articulo-titulo"]/a/@href').extract()
-		global f
+		urls = response.xpath(XPATH_URLS).extract()
+		
 		for url in urls:
 			url = response.urljoin(url)
-			self.log('En: ' + url)
 			yield scrapy.Request(url=url, callback=self.parse_details)
 		
-
+	# Con esta función sacamos los posibles titulos y articulos (ya que cada pagina tiene un formato diferente)
 	def parse_details(self, response):
-		global f
-		t1 = response.xpath('//*[@id="articulo-titulo"]/text()').extract_first()
-		t2 = response.xpath('//*[@id="titulo_noticia"]/text()').extract_first()
-		t3 = response.xpath('//*[@id="entry-title"]/text()').extract_first()
-		t4 = response.xpath('//*[@class="titulo_noticia"]/text()').extract_first()
-		t5 = response.xpath('//*[@class="entry-title"]/text()').extract_first()
-		t6 = response.xpath('//div[@class="titular cf"]/h1/text()').extract_first()
-		t7 = response.xpath('//*[@class="articulo-titulo"]/text()').extract_first()
-		t8 = response.xpath('//div[@class="single-title"]/div/h1/text()').extract_first()
-		d = {
-			'title': self.select_title(t1,t2,t3,t4,t5,t6,t7,t8)
-			#'content': response.xpath('//p/text()').extract()
-		}
-		f.write(str(d)+"\n")
-		yield d
+		
+		t1 = response.xpath(XPATH_TITLE1).extract_first()
+		t2 = response.xpath(XPATH_TITLE2).extract_first()
+		t3 = response.xpath(XPATH_TITLE3).extract_first()
+		t4 = response.xpath(XPATH_TITLE4).extract_first()
+		t5 = response.xpath(XPATH_TITLE5).extract_first()
+		t6 = response.xpath(XPATH_TITLE6).extract_first()
+		t7 = response.xpath(XPATH_TITLE7).extract_first()
+		t8 = response.xpath(XPATH_TITLE8).extract_first()
 
-	def select_title(t1,t2,t3,t4,t5,t6,t7,t8,t9):
-		final = "Título no identificado"
-		list_titles = [t1,t2,t3,t4,t5,t6,t7,t8,t9]
-		for title in list_titles:
-			if title != "" and title is not None and title != "\n":
-				final_title = title
-		return final_title
+		c1 = response.xpath(XPATH_ART1).extract()
+		c2 = response.xpath(XPATH_ART2).extract()
+		c3 = response.xpath(XPATH_ART3).extract()
+		c4 = response.xpath(XPATH_ART4).extract()
+		c5 = response.xpath(XPATH_ART5).extract()
+		c6 = response.xpath(XPATH_ART6).extract()
+		c7 = response.xpath(XPATH_ART7).extract()
+		c8 = response.xpath(XPATH_ART8).extract()
+		c9 = response.xpath(XPATH_ART9).extract()
+
+		list_titles = [t1,t2,t3,t4,t5,t6,t7,t8]
+		list_content = [c1,c2,c3,c4,c5,c6,c7,c8,c9]
+
+		# Llamamos a una funcion seleccionamos el articulo correcto (algunas funciones devuelmen mas de un argumento)
+		content = select_art(list_content)
+
+		# Seleccionamos el titulo correcto (algunas funciones devuelmen mas de un argumento)
+		title = select_title(list_titles)
+		
+		#Unimos las p seleccionadas 
+		content = " ".join(content)
+	
+		# Escribimos en nuestro fichero txt el titulo + el articulo, separados por "|"
+		while open(FILE_PATH,"w") as f :
+			f.write(title+"|"+content+"\n")
+			yield title
